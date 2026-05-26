@@ -274,8 +274,6 @@
         </h1>
 
 
-        <!-- SUMMARY -->
-
         <div class="summary-cards">
 
             <div class="summary-card">
@@ -328,8 +326,6 @@
         </div>
 
 
-
-        <!-- FORM -->
 
         <div class="input-section">
 
@@ -443,8 +439,6 @@
 
 
 
-        <!-- TABLE -->
-
         <table>
 
             <thead>
@@ -485,429 +479,456 @@
 
 
 
-    <!-- JAVASCRIPT -->
+<script>
 
-    <script>
-
-        const SCRIPT_URL =
-        'https://script.google.com/macros/s/AKfycbxv9t3DU_qmQexGpN6Z9cWJk9fI82Fan_GCap2fy42O0ULythLsJh5ZiXZ4v1jduDgV/exec';
+const SCRIPT_URL =
+'https://script.google.com/macros/s/AKfycbxv9t3DU_qmQexGpN6Z9cWJk9fI82Fan_GCap2fy42O0ULythLsJh5ZiXZ4v1jduDgV/exec';
 
 
-        let records = [];
+let records = [];
 
 
-        window.onload = function () {
+window.onload = function () {
 
-            document.getElementById('date').valueAsDate =
-                new Date();
+    document.getElementById('date').valueAsDate =
+        new Date();
+
+    loadRecords();
+};
+
+
+
+// LOAD RECORDS
+
+async function loadRecords() {
+
+    try {
+
+        const response =
+            await fetch(SCRIPT_URL);
+
+        const data =
+            await response.json();
+
+        records = data.data || [];
+
+        renderTable();
+
+        updateSummary();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert('Error loading records');
+    }
+}
+
+
+
+// ADD RECORD
+
+async function addRecord() {
+
+    const name =
+        document.getElementById('name').value.trim();
+
+    const principal =
+        document.getElementById('principal').value;
+
+    const date =
+        document.getElementById('date').value;
+
+    const amountGiven =
+        document.getElementById('amountGiven').value;
+
+    if (!name || !principal || !date) {
+
+        alert('Please fill required fields');
+
+        return;
+    }
+
+    const record = {
+
+        action: 'add',
+
+        id: Date.now(),
+
+        name: name,
+
+        principal: principal,
+
+        date: date,
+
+        amountGiven: amountGiven
+    };
+
+    try {
+
+        await fetch(SCRIPT_URL, {
+
+            method: 'POST',
+
+            mode: 'no-cors',
+
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+
+            body: JSON.stringify(record)
+        });
+
+        alert('Record Added');
+
+        clearForm();
+
+        setTimeout(() => {
 
             loadRecords();
-        };
 
+        }, 1500);
 
+    } catch (error) {
 
-        async function loadRecords() {
+        console.error(error);
 
-            try {
+        alert('Error adding record');
+    }
+}
 
-                const response =
-                    await fetch(SCRIPT_URL);
 
-                const data =
-                    await response.json();
 
-                records = data.data || [];
+// EDIT RECORD
 
-                renderTable();
+function editRecord(index) {
 
-                updateSummary();
+    const record = records[index];
 
-            } catch (error) {
+    let formattedDate = '';
 
-                console.error(error);
+    if (record.Date) {
 
-                alert('Error loading records');
-            }
-        }
+        const d = new Date(record.Date);
 
+        formattedDate =
+            d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
 
+    document.getElementById('name').value =
+        record.Name;
 
-        async function addRecord() {
+    document.getElementById('principal').value =
+        record.Principal;
 
-            const name =
-                document.getElementById('name').value.trim();
+    document.getElementById('date').value =
+        formattedDate;
 
-            const principal =
-                document.getElementById('principal').value;
+    document.getElementById('amountGiven').value =
+        record.AmountGiven;
 
-            const date =
-                document.getElementById('date').value;
+    document.getElementById('recordIndex').value =
+        index;
 
-            const amountGiven =
-                document.getElementById('amountGiven').value;
+    document.getElementById('addBtn').style.display =
+        'none';
 
-            if (!name || !principal || !date) {
+    document.getElementById('updateBtn').style.display =
+        'inline-block';
+}
 
-                alert('Please fill required fields');
 
-                return;
-            }
 
-            const record = {
+// UPDATE RECORD
 
-                action: 'add',
+async function updateRecord() {
 
-                id: Date.now(),
+    const index =
+        document.getElementById('recordIndex').value;
 
-                name: name,
+    const record = records[index];
 
-                principal: principal,
+    const updatedRecord = {
 
-                date: date,
+        action: 'update',
 
-                amountGiven: amountGiven
-            };
+        id: record.ID,
 
-            try {
+        name:
+            document.getElementById('name').value,
 
-                await fetch(SCRIPT_URL, {
+        principal:
+            document.getElementById('principal').value,
 
-                    method: 'POST',
+        date:
+            document.getElementById('date').value,
 
-                    mode: 'no-cors',
+        amountGiven:
+            document.getElementById('amountGiven').value
+    };
 
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
+    try {
 
-                    body: JSON.stringify(record)
-                });
+        await fetch(SCRIPT_URL, {
 
-                alert('Record Added');
+            method: 'POST',
 
-                clearForm();
+            mode: 'no-cors',
 
-                setTimeout(() => {
+            headers: {
+                'Content-Type': 'text/plain'
+            },
 
-                    loadRecords();
+            body: JSON.stringify(updatedRecord)
+        });
 
-                }, 1500);
+        alert('Record Updated');
 
-            } catch (error) {
+        clearForm();
 
-                console.error(error);
+        document.getElementById('addBtn').style.display =
+            'inline-block';
 
-                alert('Error adding record');
-            }
-        }
+        document.getElementById('updateBtn').style.display =
+            'none';
 
+        setTimeout(() => {
 
+            loadRecords();
 
-        function editRecord(index) {
+        }, 1500);
 
-            const record = records[index];
+    } catch (error) {
 
-            document.getElementById('name').value =
-                record.Name;
+        console.error(error);
 
-            document.getElementById('principal').value =
-                record.Principal;
+        alert('Error updating record');
+    }
+}
 
-            document.getElementById('date').value =
-                record.Date;
 
-            document.getElementById('amountGiven').value =
-                record.AmountGiven;
 
-            document.getElementById('recordIndex').value =
-                index;
+// DELETE RECORD
 
-            document.getElementById('addBtn').style.display =
-                'none';
+async function deleteRecord(index) {
 
-            document.getElementById('updateBtn').style.display =
-                'inline-block';
-        }
+    const confirmDelete =
+        confirm('Delete this record?');
 
+    if (!confirmDelete) return;
 
+    const record = records[index];
 
-        async function updateRecord() {
+    try {
 
-            const index =
-                document.getElementById('recordIndex').value;
+        await fetch(SCRIPT_URL, {
 
-            const record = records[index];
+            method: 'POST',
 
-            const updatedRecord = {
+            mode: 'no-cors',
 
-                action: 'update',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
 
-                id: record.ID,
+            body: JSON.stringify({
 
-                name:
-                    document.getElementById('name').value,
+                action: 'delete',
 
-                principal:
-                    document.getElementById('principal').value,
+                id: record.ID
+            })
+        });
 
-                date:
-                    document.getElementById('date').value,
+        alert('Record Deleted');
 
-                amountGiven:
-                    document.getElementById('amountGiven').value
-            };
+        setTimeout(() => {
 
-            try {
+            loadRecords();
 
-                await fetch(SCRIPT_URL, {
+        }, 1500);
 
-                    method: 'POST',
+    } catch (error) {
 
-                    mode: 'no-cors',
+        console.error(error);
 
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
+        alert('Error deleting record');
+    }
+}
 
-                    body: JSON.stringify(updatedRecord)
-                });
 
-                alert('Record Updated');
 
-                clearForm();
+// RENDER TABLE
 
-                document.getElementById('addBtn').style.display =
-                    'inline-block';
+function renderTable() {
 
-                document.getElementById('updateBtn').style.display =
-                    'none';
+    const tbody =
+        document.getElementById('tableBody');
 
-                setTimeout(() => {
+    if (records.length === 0) {
 
-                    loadRecords();
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    No Records Found
+                </td>
+            </tr>
+        `;
 
-                }, 1500);
+        return;
+    }
 
-            } catch (error) {
+    tbody.innerHTML = '';
 
-                console.error(error);
+    records.forEach((record, index) => {
 
-                alert('Error updating record');
-            }
-        }
+        tbody.innerHTML += `
 
+            <tr>
 
+                <td>${index + 1}</td>
 
-        async function deleteRecord(index) {
+                <td>${record.Name}</td>
 
-            const confirmDelete =
-                confirm('Delete this record?');
+                <td>
+                    ₹${Number(record.Principal)
+                        .toLocaleString('en-IN')}
+                </td>
 
-            if (!confirmDelete) return;
+                <td>${record.Date}</td>
 
-            const record = records[index];
+                <td>
+                    ${record.AmountGiven || '-'}
+                </td>
 
-            try {
+                <td>
 
-                await fetch(SCRIPT_URL, {
+                    <button
+                        class="action-btn edit-btn"
+                        onclick="editRecord(${index})"
+                    >
+                        Edit
+                    </button>
 
-                    method: 'POST',
+                    <button
+                        class="action-btn delete-btn"
+                        onclick="deleteRecord(${index})"
+                    >
+                        Delete
+                    </button>
 
-                    mode: 'no-cors',
+                </td>
 
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
+            </tr>
+        `;
+    });
+}
 
-                    body: JSON.stringify({
 
-                        action: 'delete',
 
-                        id: record.ID
-                    })
-                });
+// UPDATE SUMMARY
 
-                alert('Record Deleted');
+function updateSummary() {
 
-                setTimeout(() => {
+    const totalPrincipal =
+        records.reduce((sum, record) => {
 
-                    loadRecords();
+            return sum +
+                Number(record.Principal || 0);
 
-                }, 1500);
+        }, 0);
 
-            } catch (error) {
 
-                console.error(error);
+    const totalAmountGiven =
+        records.reduce((sum, record) => {
 
-                alert('Error deleting record');
-            }
-        }
+            return sum +
+                Number(record.AmountGiven || 0);
 
+        }, 0);
 
 
-        function renderTable() {
+    document.getElementById('totalPrincipal')
+        .innerText =
+        '₹' +
+        totalPrincipal.toLocaleString('en-IN');
 
-            const tbody =
-                document.getElementById('tableBody');
 
-            if (records.length === 0) {
+    document.getElementById('totalAmountGiven')
+        .innerText =
+        '₹' +
+        totalAmountGiven.toLocaleString('en-IN');
 
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6">
-                            No Records Found
-                        </td>
-                    </tr>
-                `;
 
-                return;
-            }
+    document.getElementById('totalRecords')
+        .innerText =
+        records.length;
+}
 
-            tbody.innerHTML = '';
 
-            records.forEach((record, index) => {
 
-                tbody.innerHTML += `
+// CLEAR FORM
 
-                    <tr>
+function clearForm() {
 
-                        <td>${index + 1}</td>
+    document.getElementById('name').value = '';
 
-                        <td>${record.Name}</td>
+    document.getElementById('principal').value = '';
 
-                        <td>
-                            ₹${Number(record.Principal)
-                                .toLocaleString('en-IN')}
-                        </td>
+    document.getElementById('amountGiven').value = '';
 
-                        <td>${record.Date}</td>
+    document.getElementById('date').valueAsDate =
+        new Date();
+}
 
-                        <td>
-                            ${record.AmountGiven || '-'}
-                        </td>
 
-                        <td>
 
-                            <button
-                                class="action-btn edit-btn"
-                                onclick="editRecord(${index})"
-                            >
-                                Edit
-                            </button>
+// EXPORT CSV
 
-                            <button
-                                class="action-btn delete-btn"
-                                onclick="deleteRecord(${index})"
-                            >
-                                Delete
-                            </button>
+function exportToCSV() {
 
-                        </td>
+    if (records.length === 0) {
 
-                    </tr>
-                `;
-            });
-        }
+        alert('No records found');
 
+        return;
+    }
 
+    let csv =
+        'Name,Principal,Date,Amount Given\n';
 
-        function updateSummary() {
+    records.forEach(record => {
 
-            const totalPrincipal =
-                records.reduce((sum, record) => {
+        csv +=
+            `${record.Name},` +
+            `${record.Principal},` +
+            `${record.Date},` +
+            `${record.AmountGiven}\n`;
+    });
 
-                    return sum +
-                        Number(record.Principal || 0);
+    const blob =
+        new Blob([csv], {
+            type: 'text/csv'
+        });
 
-                }, 0);
+    const url =
+        window.URL.createObjectURL(blob);
 
+    const a =
+        document.createElement('a');
 
-            const totalAmountGiven =
-                records.reduce((sum, record) => {
+    a.href = url;
 
-                    return sum +
-                        Number(record.AmountGiven || 0);
+    a.download =
+        'weekly-tracker.csv';
 
-                }, 0);
+    a.click();
 
+    window.URL.revokeObjectURL(url);
+}
 
-            document.getElementById('totalPrincipal')
-                .innerText =
-                '₹' +
-                totalPrincipal.toLocaleString('en-IN');
-
-
-            document.getElementById('totalAmountGiven')
-                .innerText =
-                '₹' +
-                totalAmountGiven.toLocaleString('en-IN');
-
-
-            document.getElementById('totalRecords')
-                .innerText =
-                records.length;
-        }
-
-
-
-        function clearForm() {
-
-            document.getElementById('name').value = '';
-
-            document.getElementById('principal').value = '';
-
-            document.getElementById('amountGiven').value = '';
-
-            document.getElementById('date').valueAsDate =
-                new Date();
-        }
-
-
-
-        function exportToCSV() {
-
-            if (records.length === 0) {
-
-                alert('No records found');
-
-                return;
-            }
-
-            let csv =
-                'Name,Principal,Date,Amount Given\n';
-
-            records.forEach(record => {
-
-                csv +=
-                    `${record.Name},` +
-                    `${record.Principal},` +
-                    `${record.Date},` +
-                    `${record.AmountGiven}\n`;
-            });
-
-            const blob =
-                new Blob([csv], {
-                    type: 'text/csv'
-                });
-
-            const url =
-                window.URL.createObjectURL(blob);
-
-            const a =
-                document.createElement('a');
-
-            a.href = url;
-
-            a.download =
-                'weekly-tracker.csv';
-
-            a.click();
-
-            window.URL.revokeObjectURL(url);
-        }
-
-    </script>
+</script>
 
 </body>
-
 </html>
